@@ -2,8 +2,13 @@
 # no streaming 
 # version = 1.0 
 from langchain.chat_models import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
+from langchain.memory import ConversationBufferMemory, ChatMessageHistory
 from langchain.chains import ConversationChain
+
+from langchain.schema.messages import (
+    AIMessage,
+    HumanMessage,
+)
 
 # Set up logging
 import logging
@@ -28,19 +33,21 @@ memory = ConversationBufferMemory(return_messages=True)
 conversation = ConversationChain(memory=memory, llm=llm)
 
 # generate a response to the user chat message
-def chat_response(question):
+def chat_response(question: str):
     response = conversation.predict(input=question) 
     messages = conversation.memory.load_memory_variables({})
-    inp_tokens = llm.get_num_tokens_from_messages(question)
-    otp_tokens = llm.get_num_tokens_from_messages(response)
+    inp_message = [HumanMessage(content=question)]
+    out_message = [AIMessage(content=response)]
+    inp_tokens = llm.get_num_tokens_from_messages(inp_message)
+    out_tokens = llm.get_num_tokens_from_messages(out_message)
     all_tokens = llm.get_num_tokens_from_messages(messages['history'])
     
     logging.info("User: %s", question)
     logging.info("ChatGPT: %s", response)
     logging.info("%s input tokens", inp_tokens)
-    logging.info("%s output tokens", otp_tokens)
-    logging.info("%s tokens", inp_tokens+otp_tokens)
-    logging.info("%s tokens in this conversation so far", all_tokens)
+    logging.info("%s output tokens", out_tokens)
+    logging.info("%s total tokens", inp_tokens+out_tokens)
+    logging.info("%s tokens in this conversation altogether", all_tokens)
 
     return response
 
