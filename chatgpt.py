@@ -28,14 +28,19 @@ memory = ConversationBufferMemory(return_messages=True)
 conversation = ConversationChain(memory=memory, llm=llm)
 
 # generate a response to the user chat message
-def chat_response(user_input):
-    response = conversation.predict(input=user_input) 
+def chat_response(question):
+    response = conversation.predict(input=question) 
     messages = conversation.memory.load_memory_variables({})
-    num_tokens = llm.get_num_tokens_from_messages(messages['history'])
-
-    logging.info("User: %s", user_input)
+    inp_tokens = llm.get_num_tokens_from_messages(question)
+    otp_tokens = llm.get_num_tokens_from_messages(response)
+    all_tokens = llm.get_num_tokens_from_messages(messages['history'])
+    
+    logging.info("User: %s", question)
     logging.info("ChatGPT: %s", response)
-    logging.info("Usage: %s tokens", num_tokens)
+    logging.info("%s input tokens", inp_tokens)
+    logging.info("%s output tokens", otp_tokens)
+    logging.info("%s tokens", inp_tokens+otp_tokens)
+    logging.info("%s tokens in this conversation so far", all_tokens)
 
     return response
 
